@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 import shutil
 import sys
-import first_repo.normalize as normalize
+import  normalize
 
 main_folder = Path(sys.argv[1])
 
