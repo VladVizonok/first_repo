@@ -1,8 +1,7 @@
-import re
-from pathlib import Path
+import re 
 import shutil
 import sys
-import  normalize
+from pathlib import Path
 
 main_folder = Path(sys.argv[1])
 
@@ -36,6 +35,22 @@ folder_dict = {
     'archive' : ['ZIP', 'GZ', 'TAR'],
 }
 
+
+def normalize(file_name):
+    CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґ"
+    TRANSLATION = ("a", "b", "v", "g", "d", "e", "e", "j", "z", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
+                    "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya", "je", "i", "ji", "g")
+
+    TRANS = {}
+    for key, value in zip(CYRILLIC_SYMBOLS, TRANSLATION):
+        TRANS[ord(key)] = value
+        TRANS[ord(key.upper())] = value.upper()
+
+    file_name, *extencion = file_name.name.split('.')
+    new_file_name = re.sub(r'\W', '_', file_name).translate(TRANS)
+
+    return f"{new_file_name}.{'.'.join(extencion)}"
+
 def get_extencion(file_name):
     return Path(file_name).suffix[1:].upper()
 
@@ -43,7 +58,7 @@ def manage_archive(archive_name, extencion):
 
     # Нормалізуємо імʼя архіву та видаляємо формат файлу для створення імʼя папки 
 
-    new_archive_name = normalize.normalize(archive_name).replace(f'.{extencion.lower()}', '') 
+    new_archive_name = normalize(archive_name).replace(f'.{extencion.lower()}', '') 
     archive_folder = archive_dir/new_archive_name
     archive_folder.mkdir(exist_ok=True)
 
@@ -119,7 +134,8 @@ def scan(folder_name):
     print("Known Extensions List:", known_extension_list, sep='\n')
     print("Unknown Extensions List:", unknown_extension_list, sep='\n')
 
-def main(folder_for_sort):
+def main(folder_for_sort=main_folder):
+    
     for file in folder_for_sort.iterdir():
         try:
             if file.name in folder_list:
@@ -136,36 +152,33 @@ def main(folder_for_sort):
         # Сортуємо файли за їх розширеннями 
 
             if get_extencion(file) in folder_dict['image']:
-                file.replace(image_dir/normalize.normalize(file))
+                file.replace(image_dir/normalize(file))
 
             if get_extencion(file) in folder_dict['video']:
-                file.replace(video_dir/normalize.normalize(file))
+                file.replace(video_dir/normalize(file))
 
             if get_extencion(file) in folder_dict['documents']:
-                file.replace(documents_dir/normalize.normalize(file))
+                file.replace(documents_dir/normalize(file))
 
             if get_extencion(file) in folder_dict['audio']:
-                file.replace(audio_dir/normalize.normalize(file))
+                file.replace(audio_dir/normalize(file))
 
             if get_extencion(file) in folder_dict['archive']:
                 manage_archive(file, get_extencion(file))
             else:
                 try:   
-                    file.replace(other_dir/normalize.normalize(file))
+                    file.replace(other_dir/normalize(file))
                 except FileNotFoundError:
                     continue
                 except OSError:
                     continue
         except FileNotFoundError:
             continue
-    
+  
 if __name__ == '__main__':
     main_folder = Path(sys.argv[1])
     main(main_folder)
     scan(main_folder)
 
 
-    
-    
-
-
+  
